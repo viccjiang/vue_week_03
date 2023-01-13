@@ -34,6 +34,9 @@
 						<th width="100">
 							是否啟用
 						</th>
+						<th width="100">
+							是否推薦
+						</th>
 						<th width="120">
 							編輯
 						</th>
@@ -48,6 +51,11 @@
 						<td>
 							<span v-bind:class="{ 'text-success': item.is_enabled }">
 								{{ item.is_enabled ? '啟用' : '未啟用' }}
+							</span>
+						</td>
+						<td>
+							<span v-bind:class="{ 'text-success': item.is_top }">
+								{{ item.is_top ? '推薦' : '未推薦' }}
 							</span>
 						</td>
 						<td>
@@ -74,7 +82,7 @@
 							<span v-if="isNew">新增產品</span>
 							<span v-else>編輯產品</span>
 						</h5>
-						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+						<button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						<div class="row">
@@ -86,13 +94,15 @@
 									</div>
 									<img class="img-fluid" :src="tempProduct.imageUrl" alt="">
 								</div>
-								<h3 class="mb-3">新增次要圖片</h3>
+								<hr>
+
 								<!-- 先判斷是不是陣列 -->
 								<div v-if="Array.isArray(tempProduct.imagesUrl)">
+									<p class="mb-3">新增次要圖片</p>
 									<!-- 要注意這裡是 imagesUrl 這裡有 s -->
 									<div class="mb-1" v-for="(image, key) in tempProduct.imagesUrl" :key="key">
 										<div class="mb-3">
-											<!-- 無法 focus，無法對應到該對應的 input -->
+											<!-- 問題 : 無法 focus，無法對應到該對應的 input -->
 											<!-- <label for="imagesUrl" class="form-label" >圖片網址</label>
 											<input v-model="tempProduct.imagesUrl[key]" id="imagesUrl" type="text" class="form-control"
 												placeholder="請輸入圖片連結"> -->
@@ -102,6 +112,12 @@
 										</div>
 										<img class="img-fluid" :src="image">
 									</div>
+									<!-- 第一階段 !tempProduct.imagesUrl.length 判斷陣列內有沒有東西 -->
+									<!-- 先判斷陣列內 有沒有第一個元素 如果沒有的話要新增一個 -->
+									<!-- v-if = "0" 這個意思是 陣列長度是 0 的話( 沒有東西 )  如果都沒有的話 要跑出新增一個 -->
+									<!-- 第二階段 tempProduct.imagesUrl[tempProduct.imagesUrl.length - 1] 判斷 (特定索引位置) 內容裡面有沒有填文字 -->
+									<!-- 如果有陣列，要判斷 (特定索引位置) 內容裡面有沒有填文字，當有字的話跑出新增下一個 -->
+									<!-- 索引位置帶入(最後一個就是length-1) 陣列長度-1 ( tempProduct.imagesUrl.length - 1 ) -->
 									<div v-if="!tempProduct.imagesUrl.length || tempProduct.imagesUrl[tempProduct.imagesUrl.length - 1]">
 										<button class="btn btn-outline-primary btn-sm d-block w-100"
 											@click="tempProduct.imagesUrl.push('')">
@@ -114,52 +130,71 @@
 										</button>
 									</div>
 								</div>
+								<!-- 問題 ﹔如果一開始新增產品時沒有新增多圖，再次編輯時 tempProduct 就不會有 imagesUrl 陣列，所以需要判斷。如果不是陣列的話就會出現另一個新增圖片的按鈕，點擊來新增空陣列 -->
+								<!-- 所以，這裡的 v-else 對應是上方 v-if Array.isArray 這個判斷式，所以這裡的意思是指，若不是陣列的話，直接跑 createImages 這個方法嗎 ? 直接給空陣列 [] 並且新增 push 空陣列 ，請問助教這裡的寫法是這個意思嗎 ? -->
+								<div v-else>
+									<button class="btn btn-outline-primary btn-sm d-block w-100" @click="createImages">
+										新增圖片
+									</button>
+								</div>
 							</div>
 							<div class="col-sm-8 text-start">
 								<div class="mb-3">
 									<label for="title" class="form-label">標題</label>
-									<input id="title" type="text" class="form-control" placeholder="請輸入標題">
+									<input id="title" v-model="tempProduct.title" type="text" class="form-control" placeholder="請輸入標題">
 								</div>
 
 								<div class="row">
 									<div class="mb-3 col-md-6">
 										<label for="category" class="form-label">分類</label>
-										<input id="category" type="text" class="form-control" placeholder="請輸入分類">
+										<input id="category" v-model="tempProduct.category" type="text" class="form-control"
+											placeholder="請輸入分類">
 									</div>
 									<div class="mb-3 col-md-6">
 										<label for="price" class="form-label">單位</label>
-										<input id="unit" type="text" class="form-control" placeholder="請輸入單位">
+										<input id="unit" v-model="tempProduct.unit" type="text" class="form-control" placeholder="請輸入單位">
 									</div>
 								</div>
 
 								<div class="row">
 									<div class="mb-3 col-md-6">
 										<label for="origin_price" class="form-label">原價</label>
-										<input id="origin_price" type="number" min="0" class="form-control" placeholder="請輸入原價">
+										<input id="origin_price" v-model.number="tempProduct.origin_price" type="number" min="0"
+											class="form-control" placeholder="請輸入原價">
 									</div>
 									<div class="mb-3 col-md-6">
 										<label for="price" class="form-label">售價</label>
-										<input id="price" type="number" min="0" class="form-control" placeholder="請輸入售價">
+										<input id="price" v-model.number="tempProduct.price" type="number" min="0" class="form-control"
+											placeholder="請輸入售價">
 									</div>
 								</div>
 								<hr>
 
 								<div class="mb-3">
 									<label for="description" class="form-label">產品描述</label>
-									<textarea id="description" type="text" class="form-control" placeholder="請輸入產品描述">
+									<textarea id="description" v-model="tempProduct.description" type="text" class="form-control"
+										placeholder="請輸入產品描述">
 					  </textarea>
 								</div>
 								<div class="mb-3">
 									<label for="content" class="form-label">說明內容</label>
-									<textarea id="description" type="text" class="form-control" placeholder="請輸入說明內容">
+									<textarea id="description" v-model="tempProduct.content" type="text" class="form-control" placeholder="請輸入說明內容">
 					  </textarea>
 								</div>
 								<div class="mb-3">
 									<div class="form-check">
-										<input id="is_enabled" class="form-check-input" type="checkbox" :true-value="1" :false-value="0">
+										<input id="is_enabled" class="form-check-input" v-model="tempProduct.is_enabled" type="checkbox" :true-value="1" :false-value="0">
 										<label class="form-check-label" for="is_enabled">是否啟用</label>
 									</div>
 								</div>
+
+								<div class="mb-3">
+									<div class="form-check">
+										<input id="is_top" class="form-check-input" v-model="tempProduct.is_top" type="checkbox" :true-value="1" :false-value="0">
+										<label class="form-check-label" for="is_top">是否推薦</label>
+									</div>
+								</div>
+
 							</div>
 						</div>
 					</div>
@@ -167,7 +202,7 @@
 						<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
 							取消
 						</button>
-						<button type="button" class="btn btn-primary">
+						<button type="button" class="btn btn-primary" @click="updateProduct">
 							確認
 						</button>
 					</div>
@@ -180,19 +215,19 @@
 				<div class="modal-content border-0">
 					<div class="modal-header bg-danger text-white">
 						<h5 id="delProductModalLabel" class="modal-title">
-							<span>刪除產品</span>
+							<span>刪除 {{tempProduct.title}}</span>
 						</h5>
 						<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
 					</div>
 					<div class="modal-body">
 						是否刪除
-						<strong class="text-danger"></strong> 商品(刪除後將無法恢復)。
+						<strong class="text-danger"></strong> {{tempProduct.title}} 商品(刪除後將無法恢復)。
 					</div>
 					<div class="modal-footer">
 						<button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">
 							取消
 						</button>
-						<button type="button" class="btn btn-danger">
+						<button type="button" class="btn btn-danger" @click="delProduct">
 							確認刪除
 						</button>
 					</div>

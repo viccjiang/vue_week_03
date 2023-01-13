@@ -9,7 +9,7 @@ const app = createApp({
       tempProduct: {
         imagesUrl: [],
       },
-      isNew: false,
+      isNew: false, // 判斷是否為新產品或編輯 ( 新增或編輯 )
       productModal: null,
       delProductModal: null,
     };
@@ -36,9 +36,6 @@ const app = createApp({
           console.log(err.data.message);
         });
     },
-    productDetail(perItem) {
-      this.tempProduct = perItem;
-    },
     openModal(status, item) {
       if (status === 'add') {
         console.log('add');
@@ -52,16 +49,55 @@ const app = createApp({
         this.tempProduct = { ...item };
         this.isNew = false;
         this.productModal.show();
-      }else if (status === 'delete') {
+      } else if (status === 'delete') {
         console.log('delete');
         this.tempProduct = { ...item };
         this.delProductModal.show();
       }
+    },
+    updateProduct() {
+      // console.log(this.tempProduct);
+      let url = `${this.apiUrl}/api/${this.apiPath}/admin/product`;
+      let httpMethod = 'post' // 注意這裡要寫字串
 
-    }
+      // 若不是新增而是編輯狀態
+      if (!this.isNew) {
+        url = `${this.apiUrl}/api/${this.apiPath}/admin/product/${this.tempProduct.id}`;
+        httpMethod = 'put'
+      }
+
+      axios[httpMethod](url, { data: this.tempProduct })
+        .then(res => {
+          console.log(res);
+          this.productModal.hide();
+          this.getProduct();
+        })
+        .catch(err => {
+          alert(err.data.message);
+        })
+
+    },
+    delProduct() {
+      const url = `${this.apiUrl}/api/${this.apiPath}/admin/product/${this.tempProduct.id}`
+      axios.delete(url)
+        .then(res => {
+          console.log(res);
+          alert(res.data.message);
+          this.delProductModal.hide();
+          this.getProduct();
+        })
+        .catch((err) => {
+          alert(err.data.message);
+          console.dir(err)
+        })
+    },
+    createImages() {
+      this.tempProduct.imagesUrl = [];
+      this.tempProduct.imagesUrl.push('');
+    },
   },
   mounted() {
-    this.productModal = new bootstrap.Modal(document.getElementById('productModal'), { keyboard: false })
+    this.productModal = new bootstrap.Modal(document.getElementById('productModal'), { keyboard: false,backdrop: 'static' })
     this.delProductModal = new bootstrap.Modal(document.getElementById('delProductModal'), { keyboard: false })
 
 
