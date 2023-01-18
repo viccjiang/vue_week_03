@@ -103,8 +103,8 @@
 									<div class="mb-1" v-for="(image, key) in tempProduct.imagesUrl" :key="key">
 										<div class="mb-3">
 											<!-- 問題 : 無法 focus，無法對應到該對應的 input -->
-											<label :for="image" class="form-label" >圖片網址</label>
-											<input v-model="tempProduct.imagesUrl[key]" :id="image" type="text" class="form-control"
+											<label :for="`imginput-${key}`" class="form-label" >圖片網址</label>
+											<input v-model="tempProduct.imagesUrl[key]" :id="`imginput-${key}`" type="text" class="form-control"
 												placeholder="請輸入圖片連結">
 											<!-- <label class="form-label">圖片網址</label>
 											<input v-model="tempProduct.imagesUrl[key]" type="text" class="form-control"

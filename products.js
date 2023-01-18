@@ -27,7 +27,7 @@ const app = createApp({
         });
     },
     getProduct() {
-      axios.get(`${this.apiUrl}/api/${this.apiPath}/admin/products`)
+      axios.get(`${this.apiUrl}/api/${this.apiPath}/admin/products/all`)
         .then((res) => {
           console.log(res.data);
           this.allProducts = res.data.products;
